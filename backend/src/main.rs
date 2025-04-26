@@ -1,13 +1,17 @@
 use axum::{
+    extract::Multipart,
     routing::get,
-    Router,
+    routing::post,
+    response::Json,
+    Router
 };
 use std::net::SocketAddr;
 
 #[tokio::main]
 async fn main() {
     // build our application with a single route
-    let app = Router::new().route("/", get(root));
+    let app = Router::new().route("/", get(root))
+    .route("/image", post(classify_image));
 
     // Get the port number from the environment, default to 3000
     let port: u16 = std::env::var("PORT")
@@ -28,4 +32,16 @@ async fn main() {
 // basic handler that responds with a static string
 async fn root() -> &'static str {
     "Hello World!"
+}
+
+async fn classify_image(mut multipart: Multipart) -> Json<bool>{
+
+    while let Some(field) = multipart.next_field().await.unwrap(){
+        let name = field.name().unwrap().to_string();
+        let data = field.bytes().await.unwrap();
+        println!("File Accepted: '{}'", name);
+        println!("Data Size: {:?}", data.len());
+    }
+
+    Json(true)
 }

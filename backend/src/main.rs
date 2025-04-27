@@ -6,6 +6,8 @@ use axum::{
     Router
 };
 use std::net::SocketAddr;
+use image::{GenericImageView, ImageReader};
+use std::io::{Cursor, Bytes};
 
 #[tokio::main]
 async fn main() {
@@ -44,4 +46,22 @@ async fn classify_image(mut multipart: Multipart) -> Json<bool>{
     }
 
     Json(true)
+}
+
+fn preprocess_image(data: Vec<u8>) -> Result<Vec<f32>, Box<dyn std::error::Error>> {
+    let img = ImageReader::new(Cursor::new(data))
+        .with_guessed_format()?
+        .decode()?;
+    let resized_img = img.resize(224, 224, image::imageops::FilterType::Nearest);
+
+    let rgb_img = resized_img.to_rgb8();
+
+    let input_data: Vec<f32> = rgb_img
+    .pixels()
+        .flat_map(|p| {
+            p.0.iter().map(|&channel| (channel as f32) / 255.0).collect::<Vec<f32>>()
+        })
+        .collect();
+
+    Ok(input_data)
 }

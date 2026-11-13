@@ -110,4 +110,11 @@ fn model_run_image(processed_image:Vec<f32>) {
     // let input= tensor::Tensor::from_data(data_in, &device);
     let output = model.forward(img_tensor);
     println!("{:?}",output);
+    let (score, idx) = output.max_dim_with_indices(1);
+    let idx = idx.into_scalar() as usize;
+    println!(
+        "Predicted: XX\nCategory Id: {}\nScore: {:.4}",
+        idx,
+        score.into_scalar()
+    );
 }
